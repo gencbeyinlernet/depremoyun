@@ -1,0 +1,6 @@
+{
+  "name": "Afet Öncesi 60 Saniye",
+  "description": "Deprem ve afet öncesi hazırlık, tehlike avı, acil durum çantası ve aile buluşma planı simülasyonu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
