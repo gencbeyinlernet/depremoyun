@@ -12,6 +12,7 @@ import { Stage3Plan } from './components/Stage3Plan';
 import { FinalScreen } from './components/FinalScreen';
 import { AiAssistantDrawer } from './components/AiAssistantDrawer';
 import { HelpModal } from './components/HelpModal';
+import { PenguinGuide } from './components/PenguinGuide';
 import {
   calculateHazardScore,
   evaluateBagSelection,
@@ -116,11 +117,12 @@ export default function App() {
 
   // Dynamic scores
   const hazardScore = calculateHazardScore(fixedHazards.length, 6);
-  const bagScore = evaluateBagSelection(selectedBagItems).score;
+  const bagEvaluation = evaluateBagSelection(selectedBagItems);
+  const bagScore = bagEvaluation.score;
   const planScore = evaluatePlan(safeZoneId, meetingPointId, commPlanId).score;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950 pb-20 sm:pb-12">
       {/* Top Navigation */}
       <Navbar
         currentStage={currentStage}
@@ -193,6 +195,18 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Cheerful Penguin Guide on the Left Side ("Paytak") */}
+      <PenguinGuide
+        currentStage={currentStage}
+        mode={mode}
+        fixedHazardsCount={fixedHazards.length}
+        bagEssentialsCount={bagEvaluation.essentialCount}
+        bagWrongCount={bagEvaluation.wrongCount}
+        safeZoneId={safeZoneId}
+        meetingPointId={meetingPointId}
+        commPlanId={commPlanId}
+      />
 
       {/* Floating AI Assistant Trigger Button (Bottom Right) */}
       <div className="fixed bottom-5 right-5 z-40">

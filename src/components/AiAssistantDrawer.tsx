@@ -64,6 +64,40 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
     'Toplanma alanımı nasıl sorgularım?',
   ];
 
+  // Intelligent fallbacks for static hosting environments (e.g., GitHub Pages)
+  const getStaticFallbackReply = (userMsg: string): string => {
+    const lower = userMsg.toLowerCase();
+    if (lower.includes('toplanma') || lower.includes('nerede') || lower.includes('öğrenirim') || lower.includes('buluşma')) {
+      return 'Afet toplanma alanınızı e-Devlet kapısı üzerinden AFAD "Acil Toplanma Alanı Sorgulama" hizmetiyle kolayca öğrenebilirsiniz. İkametgahınıza en yakın geniş park ve okul bahçeleri belirlenmiştir.';
+    }
+    if (lower.includes('çanta') || lower.includes('canta')) {
+      return 'Afet çantanızda ilk 72 saat için kişi başı günlük en az 1.5 litre su, düdük, pilli fener ve yedek piller, ilk yardım seti, dayanıklı konserve, önemli evrak fotokopileri ve reçeteli ilaçlar mutlaka bulunmalıdır. Mum ve çakmak gibi açık alevli eşyalardan gaz kaçağı riski nedeniyle kaçınılmalıdır.';
+    }
+    if (lower.includes('sabitle') || lower.includes('tehlike') || lower.includes('dolap')) {
+      return 'Depremlerde yaralanmaların %50\'den fazlası devrilen eşyalardan kaynaklanır. Kitaplıkları, gardıropları ve televizyonları L-braket ve dübellerle duvara sabitlemeli; yatak başlarındaki ağır tabloları kaldırmalı ve çıkış kapısının önünü daima açık tutmalıyız.';
+    }
+    if (lower.includes('anında') || lower.includes('sırasında') || lower.includes('deprem anı')) {
+      return 'Deprem sarsıntısı anında panikle koşulmaz, merdivenlere ve asansörlere gidilmez! Sağlam bir masa veya koltuk yanında ÇÖK-KAPAN-TUTUN pozisyonu alınır. Sarsıntı tamamen durduktan sonra gaz/elektrik vanaları kapatılıp güvenle bina terk edilir.';
+    }
+    if (lower.includes('hayvan') || lower.includes('kedi') || lower.includes('köpek')) {
+      return 'Evcil hayvanlarınız için afet çantasına en az 3-5 günlük kuru mama, taşınabilir su kabı, aşı kartı, tasma ve güvenli bir taşıma çantası/kutusu koymayı unutmayınız.';
+    }
+    return 'Deprem öncesinde evinizdeki dolapları L-demir ile sabitlemek, 72 saatlik afet çantası hazırlamak ve ailenizle açık bir toplanma alanı belirlemek hayat kurtarır!';
+  };
+
+  const getStaticFallbackCreative = (type: string): string => {
+    if (type === 'poem') {
+      return `Deprem gelmeden önce,\nTedbirini al evde.\nDolapları duvara,\nSağlamca sabitle.\n\nÇantada su ve fener,\nDüdük sesini iletir.\nHazırlıklı bir yürek,\nKorkuyu bilgiyle yener!`;
+    }
+    if (type === 'card') {
+      return `📋 AİLE ACİL DURUM VE AFET PLANI\n--------------------------------\n• Ev İçi Güvenli Alan: Yatak odası ve salondaki sağlam baza/koltuk yanı (Çök-Kapan-Tutun)\n• Çıkış Güzergahı: Koridor ve kapı önü daima engelsiz\n• Afet Çantası Yeri: Giriş kapısına yakın, kolay erişilebilir dolap\n• Mahalle Buluşma Noktası: Barış Parkı Açık Alanı (Binalardan ve elektrik tellerinden uzak)\n• Şehir Dışı İletişim Kişisi: Ankara'daki Teyze (Yalnızca acil SMS ile)`;
+    }
+    if (type === 'scenario') {
+      return `🚨 SENARYO: Akşam evde otururken deprem sarsıntısı başladı!\n1. Adım: Panikle kapıya koşmayın, asansöre yönelmeyin.\n2. Adım: Sağlam bir masa veya koltuk yanında başınızı koruyarak ÇÖK-KAPAN-TUTUN yapın.\n3. Adım: Sarsıntı bittiğinde gaz vanasını ve şalteri kapatın, afet çantanızı alarak açık alana çıkın.`;
+    }
+    return `1. "Afet gelmeden 60 saniye, hayat boyu emniyet!"\n2. "Dolabı sabitle duvara, güvenle bak yarına!"\n3. "Çantan hazır olsun, aklın huzurla dolsun!"\n4. "Sarsıntıda Çök-Kapan-Tutun, panikten değil bilgiden güç bul!"\n5. "Önce tedbir, sonra huzur: Afet bilinci gelecektir!"`;
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputMessage.trim();
     if (!text || isChatLoading) return;
@@ -80,18 +114,14 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text }),
       });
+      if (!res.ok) throw new Error('API_UNAVAILABLE');
       const data = await res.json();
-      setMessages([...newMessages, { role: 'assistant', text: data.reply || 'Yanıt alınamadı.' }]);
+      setMessages([...newMessages, { role: 'assistant', text: data.reply || getStaticFallbackReply(text) }]);
       sound.playSuccess();
     } catch (err) {
-      console.error('Chat error:', err);
-      setMessages([
-        ...newMessages,
-        {
-          role: 'assistant',
-          text: 'Üzgünüm, şu an bağlantı kurulamadı. Deprem öncesinde eşyaları sabitlemek, 72 saatlik afet çantası hazırlamak ve toplanma alanını belirlemek en hayati tedbirlerdir!',
-        },
-      ]);
+      // Fallback for static hosts (GitHub Pages) or offline network
+      setMessages([...newMessages, { role: 'assistant', text: getStaticFallbackReply(text) }]);
+      sound.playSuccess();
     } finally {
       setIsChatLoading(false);
     }
@@ -112,12 +142,14 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
           prompt: creativePrompt || undefined,
         }),
       });
+      if (!res.ok) throw new Error('API_UNAVAILABLE');
       const data = await res.json();
-      setCreativeResult(data.result || 'İçerik üretilemedi.');
+      setCreativeResult(data.result || getStaticFallbackCreative(creativeType));
       sound.playSuccess();
     } catch (err) {
-      console.error('Creative error:', err);
-      setCreativeResult('İçerik hazırlanırken bir hata oluştu. Lütfen tekrar deneyiniz.');
+      // Fallback for static hosts (GitHub Pages) or offline network
+      setCreativeResult(getStaticFallbackCreative(creativeType));
+      sound.playSuccess();
     } finally {
       setIsCreativeLoading(false);
     }
